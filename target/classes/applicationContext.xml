@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+	
+	<!-- 扫描包 -->
+	<context:component-scan base-package="com.cgh.pro.dao,com.cgh.pro.service"></context:component-scan>
+	
+	<!--加载properties文件  -->
+	<context:property-placeholder location="classpath:jdbc.properties"/>
+	
+	<!--数据源  -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="user" value="${jdbc.user}"/>
+		<property name="password" value="${jdbc.password}"/>
+		<property name="jdbcUrl" value="${jdbc.url}"/>
+		<property name="driverClass" value="${jdbc.driver}"/>
+
+		<property name="maxPoolSize" value="${c3p0.pool.maxPoolSize}"/>
+		<property name="minPoolSize" value="${c3p0.pool.minPoolSize}"/>
+		<property name="initialPoolSize" value="${c3p0.pool.initialPoolSize}"/>
+		<property name="acquireIncrement" value="${c3p0.pool.acquireIncrement}"/>
+	</bean>
+	
+	<!-- 配置sqlsession -->
+	<bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		
+		<!--整合mybatis  -->
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+		<property name="mapperLocations" value="classpath:com/cgh/pro/mapper/*.xml"></property>
+	</bean>
+	
+	<!-- 事务 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="insert*" propagation="REQUIRED"/>
+			<tx:method name="update*" propagation="REQUIRED"/>
+			<tx:method name="delete*" propagation="REQUIRED"/>
+			
+			<tx:method name="find*" read-only="true"/>
+			<tx:method name="find*" read-only="true"/>
+			<tx:method name="find*" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<aop:config>
+		<aop:pointcut expression="execution(* com.cgh.pro.service.*.*(..))" id="txPointCut"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointCut"/>
+	</aop:config>
+</beans>
